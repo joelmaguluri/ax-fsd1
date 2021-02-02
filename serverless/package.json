@@ -12,9 +12,8 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploydev":"serverless deploy --stage dev",
-    "deployprod":"serverless deploy --stage prod"
-
+    "deploydev": "serverless deploy --stage dev",
+    "deployprod": "serverless deploy --stage prod"
   },
   "author": "",
   "license": "ISC"
