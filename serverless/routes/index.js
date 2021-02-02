@@ -23,7 +23,6 @@ router.post('/authenticate',(req,res)=>{
 
 // Routes
 router.post('/save',(req,res)=>{
-  console.log('hello in save ');
   const {firstname,lastname,email,phone}=req.body;
   const user=new User({firstname,lastname,email,phone});
   user.save().then((response)=>{

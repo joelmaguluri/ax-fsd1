@@ -57,7 +57,6 @@ function AddUser() {
     phone: "",
   });
   const onChangeHandler = (e) => {
-    console.log(e.target.value);
     setState({ ...state, [e.target.name]: e.target.value });
   };
   const addUser = async (e) => {

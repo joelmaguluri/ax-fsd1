@@ -123,6 +123,7 @@ function Users() {
   const [loading, setLoading] = useState(true);
   const rows = useSelector((state) => state.users.users);
   const [state, setUsers] = useState({ users: [], filteredusers: [] });
+
   //fetching details and updating store
   useEffect(() => {
     const fetchUsers = async () => {
@@ -153,11 +154,6 @@ function Users() {
     /*filters the users based on the search*/
     let usersname = e.target.value;
 
-    state.users.forEach((user) => {
-      console.log(user["firstname"] + user["lastname"]);
-    });
-
-    console.log(state);
     //compare the tasks which matches input task and display them
     let searchresult = state.users.filter((user) =>
       `${user["firstname"]}${user["lastname"]}`
