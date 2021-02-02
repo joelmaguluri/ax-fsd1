@@ -1,11 +1,11 @@
-import { INIT_USER ,LOGOUT} from '../constants'
+import { LOGIN,LOGOUT} from '../constants'
 
 const initialState={
     user:null,
 }
 const AuthenticationReducer=(state=initialState,action)=>{
     switch(action.type){
-        case INIT_USER:
+        case LOGIN:
             return {
                 user:{...action.payload.user}
             }

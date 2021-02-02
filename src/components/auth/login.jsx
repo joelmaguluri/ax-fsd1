@@ -1,8 +1,9 @@
 import { makeStyles, Paper, TextField } from "@material-ui/core";
+import styled from "styled-components";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Redirect } from "react-router-dom";
-import { INIT_USER } from "../../constants";
+import { LOGIN, SERVER } from "../../constants";
 import { ButtonWrapper, ColorButton, Wrapper } from "../clients/addUsers";
 
 const useStyles = makeStyles({
@@ -17,12 +18,29 @@ const useStyles = makeStyles({
       "0 0 2px 0 rgb(145 158 171 / 24%), 0 16px 32px -4px rgb(145 158 171 / 24%)",
     borderRadius: "16px",
     alignSelf: "center",
+    fontFamily: "Alegreya Sans, sans-serif",
   },
 });
 
-export default function Login() {
-  let user = useSelector((state) => state.authentication.user);
+const StyledFlex = styled.div`
+  width: 100%;
+  display: flex;
+  align-content: center;
+  flex-direction: column;
+`;
 
+export const Input = styled(TextField)`
+  margin-top: 2px;
+  width: 100%;
+  padding-top: 5px;
+  padding-bottom: 20px;
+  label {
+    color: green;
+  }
+`;
+
+export default function Login() {
+  const user = useSelector((state) => state.authentication.user);
   const classes = useStyles();
   const dispatch = useDispatch();
 
@@ -30,68 +48,50 @@ export default function Login() {
     username: "",
     password: "",
   });
+
   const onChangeHandler = (e) => {
     console.log(e.target.value);
     setState({ ...state, [e.target.name]: e.target.value });
   };
+
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-    let response = await fetch(
-      "https://uviz4022j1.execute-api.us-east-1.amazonaws.com/authenticate/" +
-        `${state.username},${state.password}`,
-      {
-        method: "GET",
-        mode: "cors", // no-cors, *cors, same-origin
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    let response = await fetch(SERVER + `/authenticate`, {
+      method: "POST",
+      mode: "cors", // no-cors, *cors, same-origin
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...state }),
+    });
     response = await response.json();
-    console.log(response);
+
     if (response.user) {
-      dispatch({ type: INIT_USER, payload: { user: response.user } });
-    } else alert("Invalid Password");
+      dispatch({ type: LOGIN, payload: { user: response.user } });
+    } else alert("couldnt find user");
   };
+
   if (user) return <Redirect to="/dashboard" />;
   return (
-    <div
-      style={{
-        width: "100%",
-        display: "flex",
-        alignContent: "center",
-        flexDirection: "column",
-      }}
-    >
+    <StyledFlex>
       <Paper className={classes.paper}>
-        <h4 style={{ marginLeft: "24px" }}>Login</h4>
         <form onSubmit={onSubmitHandler}>
           <Wrapper>
-            <TextField
+            <h3>Login</h3>
+            <Input
               id="outlined-required"
               label="username"
               variant="filled"
-              style={{
-                width: "100%",
-                paddngTop: "20px",
-                paddingBottom: "20px",
-                color: "green",
-              }}
-              onChange={onChangeHandler}
               name="username"
+              onChange={onChangeHandler}
             />
-            <TextField
+            <Input
               id="outlined-required"
               label="Password"
               variant="filled"
-              style={{
-                width: "100%",
-                paddngTop: "20px",
-                paddingBottom: "20px",
-              }}
               type="password"
-              onChange={onChangeHandler}
               name="password"
+              onChange={onChangeHandler}
             />
           </Wrapper>
           <ButtonWrapper>
@@ -106,6 +106,6 @@ export default function Login() {
           </ButtonWrapper>
         </form>
       </Paper>
-    </div>
+    </StyledFlex>
   );
 }

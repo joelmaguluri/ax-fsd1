@@ -2,9 +2,11 @@ var express = require('express');
 var router = express.Router();
 var User =require('../model/user')
 
-router.get('/authenticate/:str',(req,res)=>{
-  let {str}=req.params;
-  const [username,password]=str.split(',')
+
+
+
+router.post('/authenticate',(req,res)=>{
+  const {username,password}=req.body;
   if(username==='axfsd1'&&password==='admin')
       res.json({
         user:{
@@ -40,10 +42,10 @@ router.post('/save',(req,res)=>{
 
 
 router.get('/users',(req,res)=>{
+
   User.find({}).then(response=>{
     console.log(response)
-    res.status(200);
-    res.json({response:response})
+    res.json({users:{...response}})
   })
 
 })
@@ -69,8 +71,32 @@ router.get('/id/:id',(req,res)=>{
 })
 
 
+router.put('/id/:id',(req,res)=>{
+  const id=req.params.id;
+
+  console.log(req.body)
+  const{firstname,lastname,email,phone}=req.body;
+  User.findByIdAndUpdate({_id:id},{firstname:firstname,lastname:lastname,email:email,phone:phone}, function(err, result){
+    
+    if(err){
+      console.log(err);
+        res.send(err)
+    }
+    else{
+        res.send(result)
+    }
+  })
+})
 
 
-
+router.delete('/id/:id',(req,res)=>{
+  const id=req.params.id;
+  User.deleteOne({_id:id}).then(doc=>{
+    console.log(doc)
+    res.json({message:'delete sucessfull'});
+  }).catch(err=>{
+    res.json({error:'delete not sucessfull',err:err});
+  })
+})
 
 module.exports = router;

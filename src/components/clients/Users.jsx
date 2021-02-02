@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
@@ -12,11 +12,44 @@ import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/styles";
 import { Link } from "react-router-dom";
-import PageEssential from "../layout/PageEssential";
-import { useSelector } from "react-redux";
+import ClientHOC from "../layout/ClientHOC";
+import { useDispatch, useSelector } from "react-redux";
+import { SERVER, SET_USERS } from "../../constants";
+import styled from "styled-components";
+import { Button, TextField } from "@material-ui/core";
+
+const StyledButton = styled(Button)`
+  font-weight: 300;
+  font-size: 15pt;
+  a {
+    text-decoration: none;
+    color: #55595e;
+  }
+`;
+
+const Flex = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  p {
+    font-weight: 700;
+    font-family: "Alegreya Sans";
+    font-size: 18pt;
+  }
+`;
+
+const StyledTabCell = styled(TableCell)`
+  font-family: "Alegreya Sans";
+  font-size: 17pt;
+  font-weight: 500;
+  color: #55595e;
+`;
 
 const useStyles = makeStyles({
   root: {
+    fontFamily: "Alegreya Sans, sans-serif",
     width: "100%",
     position: "relative",
     borderRadius: "16px",
@@ -52,6 +85,9 @@ const useStyles = makeStyles({
 
 let TableHeaderCell = withStyles((theme) => ({
   root: {
+    fontFamily: "Alegreya Sans, sans-serif",
+    fontWeight: "600",
+    fontSize: "15pt",
     textAlign: "left",
     backgroundColor: (props) => (props.background ? "#F4F6F8" : null),
     padding: "16px",
@@ -67,7 +103,6 @@ let TableHeaderCell = withStyles((theme) => ({
     borderTopRightRadius: (props) => (props.last ? "8px" : null),
     borderBottomRightRadius: (props) => (props.last ? "8px" : null),
     color: "#637381",
-    fontWeight: "600",
     marginLeft: "2px",
     border: "none",
     borderSpacing: "0",
@@ -84,74 +119,113 @@ let Content = withStyles((theme) => ({
 
 function Users() {
   const classes = useStyles();
-  let rows = useSelector((state) => state.users);
-  console.log(rows);
-  // const [page] = React.useState(0);
-  // const [rowsPerPage] = React.useState(10);
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
+  const rows = useSelector((state) => state.users.users);
+  const [state, setUsers] = useState({ users: [], filteredusers: [] });
+  //fetching details and updating store
+  useEffect(() => {
+    const fetchUsers = async () => {
+      let result = await fetch(`${SERVER}/users`, {
+        method: "GET",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const response = await result.json();
+      await dispatch({
+        type: SET_USERS,
+        payload: {
+          users: response.users,
+        },
+      });
+      setLoading(false);
+    };
+    fetchUsers();
+  }, [dispatch]);
 
+  useMemo(() => {
+    setUsers({ users: rows, filteredusers: rows });
+  }, [rows]);
+
+  const searchtaskbyname = (e) => {
+    /*filters the users based on the search*/
+    let usersname = e.target.value;
+
+    state.users.forEach((user) => {
+      console.log(user["firstname"] + user["lastname"]);
+    });
+
+    console.log(state);
+    //compare the tasks which matches input task and display them
+    let searchresult = state.users.filter((user) =>
+      `${user["firstname"]}${user["lastname"]}`
+        .replace(/\s/g, "")
+        .toLowerCase()
+        .includes(usersname.toLowerCase())
+    );
+    setUsers({ ...state, filteredusers: searchresult });
+  };
+
+  //if state is loading return loading else return table
   return (
-    <Paper className={classes.root}>
-      <Card className={classes.card} elevation={0}>
-        <Content>
-          <div style={{ width: "50%" }}>
-            <Typography className={classes.title} color="textSecondary">
-              Users
-            </Typography>
-          </div>
-          <div
-            className="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-fullWidth MuiInputBase-formControl"
-            style={{ width: "50%" }}
-          >
-            <input
-              aria-invalid="false"
-              type="password"
-              className="MuiInputBase-input MuiOutlinedInput-input"
-              style={{ padding: "25px 12px 8px", float: "right" }}
-              defaultValue
-            />
-          </div>
-        </Content>
-      </Card>
-      <TableContainer className={classes.container}>
-        <Table aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell first background>
-                Id
-              </TableHeaderCell>
-              <TableHeaderCell background>FirstName</TableHeaderCell>
-              <TableHeaderCell background>LastName</TableHeaderCell>
-              <TableHeaderCell background>Email</TableHeaderCell>
-              <TableHeaderCell background>Phone</TableHeaderCell>
-              <TableHeaderCell last background></TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row._id}>
-                <TableHeaderCell component="th" scope="row" first>
-                  {row.id}
-                </TableHeaderCell>
-                <TableCell>{row.firstname}</TableCell>
-                <TableCell last>{row.lastname}</TableCell>
-                <TableCell>{row.email}</TableCell>
-                <TableCell>{row.phone}</TableCell>
-                <TableCell>
-                  <Link
-                    to={`/client/${row._id}`}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    {/* <FontAwesomeIcon icon={faArrowCircleRight} /> */}
-                    Details
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Paper>
+    <>
+      {loading ? (
+        <div>loading</div>
+      ) : (
+        <Paper className={classes.root}>
+          <Card className={classes.card} elevation={0}>
+            <Content>
+              <Flex>
+                <Typography color="textSecondary">Users</Typography>
+
+                <TextField
+                  aria-invalid="false"
+                  type="password"
+                  variant="outlined"
+                  placeholder="Search"
+                  onChange={searchtaskbyname}
+                />
+              </Flex>
+            </Content>
+          </Card>
+          <TableContainer className={classes.container}>
+            <Table aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableHeaderCell first background>
+                    Id
+                  </TableHeaderCell>
+                  <TableHeaderCell background>FirstName</TableHeaderCell>
+                  <TableHeaderCell background>LastName</TableHeaderCell>
+                  <TableHeaderCell background>Email</TableHeaderCell>
+                  <TableHeaderCell background>Phone</TableHeaderCell>
+                  <TableHeaderCell last background></TableHeaderCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {state.filteredusers.map((row) => (
+                  <TableRow key={row._id}>
+                    <StyledTabCell>{row._id}</StyledTabCell>
+                    <StyledTabCell>{row.firstname}</StyledTabCell>
+                    <StyledTabCell>{row.lastname}</StyledTabCell>
+                    <StyledTabCell>{row.email}</StyledTabCell>
+                    <StyledTabCell>{row.phone}</StyledTabCell>
+                    <StyledTabCell>
+                      <StyledButton variant="outlined">
+                        <Link to={`/user/${row._id}`}>Details</Link>
+                      </StyledButton>
+                    </StyledTabCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
+    </>
   );
 }
 
-export default PageEssential(Users);
+export default ClientHOC(Users);

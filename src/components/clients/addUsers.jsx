@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { green } from "@material-ui/core/colors";
+import { green, red } from "@material-ui/core/colors";
 import {
   Button,
   Card,
@@ -9,7 +9,8 @@ import {
   withStyles,
 } from "@material-ui/core";
 import styled from "styled-components";
-import PageEssential from "../layout/PageEssential";
+import ClientHOC from "../layout/ClientHOC";
+import { SERVER } from "../../constants";
 
 const useStyles = makeStyles({
   root: {
@@ -38,9 +39,10 @@ export const ColorButton = withStyles((theme) => ({
   root: {
     color: "white",
     boxShadow: "rgb(0 171 85 / 24%) 0px 8px 16px 0px",
-    backgroundColor: green[500],
+    backgroundColor: (props) => (props.color === "red" ? red[500] : green[500]),
     "&:hover": {
-      backgroundColor: green[700],
+      backgroundColor: (props) =>
+        props.color === "red" ? red[700] : green[700],
     },
     margin: "3px",
   },
@@ -58,21 +60,18 @@ function AddUser() {
     console.log(e.target.value);
     setState({ ...state, [e.target.name]: e.target.value });
   };
-  const onSubmitHandler = async (e) => {
+  const addUser = async (e) => {
     e.preventDefault();
-    let response = await fetch(
-      "https://npoeootl24.execute-api.us-east-1.amazonaws.com/save",
-      {
-        method: "POST",
-        mode: "cors", // no-cors, *cors, same-origin
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...state,
-        }), // body data type must match "Content-Type" header
-      }
-    );
+    let response = await fetch(SERVER + "/save", {
+      method: "POST",
+      mode: "cors", // no-cors, *cors, same-origin
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...state,
+      }), // body data type must match "Content-Type" header
+    });
     response = await response.json();
     console.log("response", response);
     if (response.user) alert("user saved in DB");
@@ -81,7 +80,7 @@ function AddUser() {
   return (
     <Paper className={classes.root}>
       <Card className={"card"}>
-        <form onSubmit={onSubmitHandler}>
+        <form onSubmit={addUser}>
           <Wrapper>
             <TextField
               id="outlined-required"
@@ -151,4 +150,4 @@ function AddUser() {
     </Paper>
   );
 }
-export default PageEssential(AddUser);
+export default ClientHOC(AddUser);

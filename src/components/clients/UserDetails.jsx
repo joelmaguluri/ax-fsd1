@@ -1,16 +1,11 @@
-import React, { useState } from "react";
-import {
-  Avatar,
-  Card,
-  Divider,
-  Grid,
-  makeStyles,
-  Paper,
-  TextField,
-} from "@material-ui/core";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import PageEssential from "../layout/PageEssential";
+import ClientHOC from "../layout/ClientHOC";
 import { Wrapper, ButtonWrapper, ColorButton } from "./addUsers";
+import { withRouter } from "react-router-dom";
+import { Input } from "../auth/login";
+import { Avatar, Card, Grid, makeStyles, Paper } from "@material-ui/core";
+import { SERVER } from "../../constants";
 
 const useStyles = makeStyles({
   root: {
@@ -54,6 +49,15 @@ const StyledFlex = styled.div`
   }
 `;
 
+const Text = styled.h6`
+  color: #55595e;
+  font-family: "Alegreya Sans";
+  font-size: ${(props) => (props.name ? "18pt" : "14pt")};
+  i {
+    padding-right: 3px;
+  }
+`;
+
 const ImageWrapper = styled.div`
   width: 100%;
   height: 100%;
@@ -66,39 +70,82 @@ const ImageWrapper = styled.div`
   border-radius: 50%;
   justify-content: center;
 `;
-function UserDetails() {
+
+function UserDetails(props) {
+  const { match, history } = props;
+  const id = match.params.id;
   const classes = useStyles();
+  const [loading, setLoading] = useState(true);
   const [state, setState] = useState({
     firstname: "",
     lastname: "",
     email: "",
     phone: "",
   });
-  const onChangeHandler = (e) => {
-    console.log(e.target.value);
-    setState({ ...state, [e.target.name]: e.target.value });
-  };
-  const onSubmitHandler = async (e) => {
-    e.preventDefault();
-    let response = await fetch(
-      "https://npoeootl24.execute-api.us-east-1.amazonaws.com/save",
-      {
-        method: "POST",
+
+  //fetching user
+  useEffect(() => {
+    const fetchUsers = async () => {
+      let response = await fetch(SERVER + "/id/" + id, {
+        method: "GET",
         mode: "cors", // no-cors, *cors, same-origin
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...state,
-        }), // body data type must match "Content-Type" header
-      }
-    );
-    response = await response.json();
-    console.log("response", response);
-    if (response.user) alert("user saved in DB");
-    else alert("user cannot be stored in DB");
+      });
+      response = await response.json();
+      let user = response.user._doc;
+      setState({
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        phone: user.phone,
+      });
+      setLoading(false);
+    };
+    fetchUsers();
+  }, [id]);
+
+  const onChangeHandler = (e) => {
+    console.log(e.target.value);
+    setState({ ...state, [e.target.name]: e.target.value });
   };
 
+  //make updates to user
+  const UpdateHandler = async (e) => {
+    e.preventDefault();
+    let response = await fetch(`${SERVER}/id/${id}`, {
+      method: "PUT",
+      mode: "cors", // no-cors, *cors, same-origin
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...state,
+      }), // body data type must match "Content-Type" header
+    });
+    response = await response.json();
+    console.log(response);
+    if (response.err) alert("save failed");
+    else alert("successfully updated");
+  };
+
+  //delete user
+  const deleteUser = async (id) => {
+    let response = await fetch(`${SERVER}/id/${id}`, {
+      method: "DELETE",
+      mode: "cors", // no-cors, *cors, same-origin
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    response = await response.json();
+    if (response.message) history.push("/dashboard");
+    else alert("successfully updated");
+  };
+
+  if (loading) return <></>;
+  const { firstname, lastname, email, phone } = state;
   return (
     <Grid container spacing={3} className={classes.root}>
       <Grid item xs={12} sm={6}>
@@ -108,83 +155,88 @@ function UserDetails() {
               <div className="wrapper">
                 <ImageWrapper>
                   <Avatar alt="Remy Sharp" className={classes.orange}>
-                    B
+                    {state.firstname.charAt(0).toUpperCase() +
+                      " " +
+                      state.lastname.charAt(0).toUpperCase()}
                   </Avatar>
                 </ImageWrapper>
               </div>
-              <h6 style={{ marginTop: "3px", alignSelf: "center" }}>Sudeep</h6>
-              <Divider variant="middle" color="grey" />
+              <Text
+                style={{ marginTop: "3px", alignSelf: "center" }}
+                name={true}
+              >
+                {state.firstname + " " + state.lastname}
+              </Text>
               <div
                 style={{
                   display: "flex",
                   flexDirection: "row",
                 }}
               >
-                <h6 style={{ marginRight: "10px" }}>msudeep.joel@gmail.com</h6>
-                <h6>9705825766</h6>
+                <Text style={{ marginRight: "10px" }}>
+                  <i className="fa fa-envelope"></i>
+                  {state.email}
+                </Text>
+                <Text>
+                  <i className="fa fa-phone"></i>
+                  {state.email}
+                </Text>
               </div>
             </StyledFlex>
+            <ButtonWrapper>
+              <ColorButton
+                type="submit"
+                variant="outlined"
+                size="large"
+                className={classes.margin}
+                color="red"
+                onClick={() => deleteUser(id)}
+              >
+                Delete
+              </ColorButton>
+            </ButtonWrapper>
           </Card>
         </Paper>
       </Grid>
       <Grid item xs={12} sm={6}>
         <Paper className={classes.paper}>
           <Card className={"card"}>
-            <form onSubmit={onSubmitHandler}>
+            <form onSubmit={UpdateHandler}>
               <Wrapper>
-                <TextField
+                <Input
                   id="outlined-required"
                   label="First Name"
                   variant="outlined"
-                  style={{
-                    width: "100%",
-                    paddngTop: "20px",
-                    paddingBottom: "20px",
-                    color: "green",
-                  }}
                   onChange={onChangeHandler}
                   name="firstname"
+                  defaultValue={firstname}
                 />
-                <TextField
+                <Input
                   id="outlined-required"
                   label="Last Name"
                   variant="outlined"
-                  style={{
-                    width: "100%",
-                    paddngTop: "20px",
-                    paddingBottom: "20px",
-                    color: "green",
-                  }}
                   onChange={onChangeHandler}
                   name="lastname"
+                  defaultValue={lastname}
                 />
-                <TextField
+                <Input
                   id="outlined-required"
                   label="Email"
                   variant="outlined"
-                  style={{
-                    width: "100%",
-                    paddngTop: "20px",
-                    paddingBottom: "20px",
-                    color: "green",
-                  }}
                   onChange={onChangeHandler}
                   name="email"
+                  defaultValue={email}
                 />
-                <TextField
+                <Input
                   id="outlined-required"
                   label="Phone"
                   variant="outlined"
-                  style={{
-                    width: "100%",
-                    paddngTop: "20px",
-                    paddingBottom: "20px",
-                    color: "green",
-                  }}
                   onChange={onChangeHandler}
                   name="phone"
+                  defaultValue={phone}
                 />
               </Wrapper>
+
               <ButtonWrapper>
                 <ColorButton
                   type="submit"
@@ -203,4 +255,4 @@ function UserDetails() {
   );
 }
 
-export default PageEssential(UserDetails);
+export default ClientHOC(withRouter(UserDetails));

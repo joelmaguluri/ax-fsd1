@@ -8,11 +8,9 @@ import UserDetails from "./components/clients/UserDetails";
 import Login from "./components/auth/login";
 
 
-
 function App() {
   return (
     <Provider store={store}>
-   
         <Router>
             <Switch>
               <Route
