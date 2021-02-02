@@ -1,4 +1,4 @@
-# User Detail Manager
+# Contact Manager
 
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)]()
 
