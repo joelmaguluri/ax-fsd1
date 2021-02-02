@@ -1,0 +1,7 @@
+org: axerjoel
+app: axer
+component: express
+name: axer-app
+
+inputs:
+  src: ./
