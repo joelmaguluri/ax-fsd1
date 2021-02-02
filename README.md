@@ -1,6 +1,6 @@
 # Contact Manager
 
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)]()
+[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](http://axer.s3-website.us-east-2.amazonaws.com/)
 
 ## Features!!
 
